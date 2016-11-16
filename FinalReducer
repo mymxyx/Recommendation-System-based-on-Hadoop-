@@ -1,0 +1,94 @@
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
+
+public class FinalReducer extends Reducer<Text, Text, Text, Text>{
+	public void reduce(Text key,Iterable<Text> values, Context context) throws IOException,InterruptedException{
+		
+		 HashMap<Double, String> hashmap = new HashMap<Double, String>();
+		 String regex = ",|\\s+";
+		 for(Text value: values){
+			 String[] tokens = value.toString().split(regex);
+			 if(tokens.length>=2){
+				 
+				 System.out.println("hashmap: key -> value:");
+				 System.out.println(Double.parseDouble(tokens[1]) +"->"+ tokens[0]);
+				 
+				 hashmap.put(Double.parseDouble(tokens[1]), tokens[0]);
+			 }
+		 }
+		 
+		 List<Double> list = new ArrayList<Double>();  
+	     Iterator<Double> iter = hashmap.keySet().iterator();  
+	     while (iter.hasNext()) {  
+	            Double rating = iter.next();  
+	            list.add(rating);  
+	     }
+	     
+	   //sort the rating in descending order
+	    Collections.sort(list,new Comparator<Double>() {
+	    	public int compare(Double data1, Double data2) {
+	    		return data2.compareTo(data1);  
+	    	} 
+	    });  
+	    
+	    String v = "";
+	    for(int i =0; i<list.size() && i<3;i++){
+	    	if(list.get(i).compareTo(new Double(0.0001))>0){
+	    		v += hashmap.get(list.get(i)) + ":"+ list.get(i).toString() + " "; 
+	    	}
+	    }
+	    
+	    if(v.isEmpty()){
+	    	
+	    	System.out.println("---------FinalReducer: key & value -------------");
+			System.out.println(key);
+			System.out.println("sorry, no recommend places...");
+	    	
+	    	context.write(key, new Text("sorry, no recommend places..."));
+	    }
+	    
+	    else{
+	    	
+	    	System.out.println("---------FinalReducer: key & value -------------");
+			System.out.println(key);
+			System.out.println(v);
+			
+	    	context.write(key,new Text(v));
+	    }
+		
+		/*
+		 * input key & values : 3	& <1002,1.8333333333333333  ...>
+		 * 					  
+		 * output key & value : 
+		 * 
+		 */
+	}
+
+}
