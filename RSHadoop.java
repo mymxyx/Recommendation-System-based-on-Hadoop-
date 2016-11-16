@@ -128,9 +128,9 @@ public class RSHadoop {
 	    job5.setReducerClass(FinalReducer.class);
 	    job5.setOutputKeyClass(Text.class);
 	    job5.setOutputValueClass(Text.class);
-	    FileInputFormat.addInputPath(job5, new Path(IOArgs[0] + "/../User Similarity Matrix"));
+	    FileInputFormat.addInputPath(job5, new Path(IOArgs[0] + "/../Recomendation Matrix"));
 	    FileOutputFormat.setOutputPath(job5, new Path(IOArgs[1]));
-	    job3.waitForCompletion(true);
+	    job5.waitForCompletion(true);
 	    
 	    System.out.println("================ Step 5 ================");
 	    System.out.println("Final recommendation list completed");
